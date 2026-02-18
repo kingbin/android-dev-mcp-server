@@ -1,0 +1,36 @@
+{
+  "name": "android-dev-mcp-server",
+  "version": "0.1.0",
+  "description": "MCP server for Android development via ADB — device management, screen interaction, logs, crash diagnostics, and React Native helpers.",
+  "type": "module",
+  "main": "./build/index.js",
+  "bin": {
+    "android-dev-mcp-server": "./build/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "prepare": "npm run build",
+    "start": "node build/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "android",
+    "adb",
+    "development"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "zod": "^3.24.3",
+    "zod-to-json-schema": "^3.24.5",
+    "sharp": "^0.33.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}
