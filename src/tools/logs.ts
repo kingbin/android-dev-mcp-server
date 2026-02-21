@@ -6,16 +6,31 @@ export const logLogcat = tool(
   {
     name: "log_logcat",
     description:
-      "Retrieves the last 100 lines of logs from the connected Android device using logcat.",
+      "Reads logcat logs from the connected Android device. Use this tool instead of running 'adb logcat' via the shell. " +
+      "Can return all device logs or filter to a specific app package. " +
+      "Returns the most recent log lines (default 200, configurable via 'lines' parameter).",
     inputSchema: z.object({
       app_package: z
         .string()
-        .describe("The base package of the app to get the logs from"),
+        .optional()
+        .describe(
+          "Optional app package name to filter logs to (e.g. 'com.example.myapp'). " +
+          "If omitted, returns all device logs unfiltered."
+        ),
       log_level: z
-        .enum(["DEBUG", "WARNING", "ERROR"])
+        .enum(["VERBOSE", "DEBUG", "INFO", "WARNING", "ERROR"])
         .default("DEBUG")
         .describe(
-          "The log level to filter the events. Possible values: DEBUG, WARNING, ERROR."
+          "Minimum log level to include. Possible values: VERBOSE, DEBUG, INFO, WARNING, ERROR."
+        ),
+      lines: z
+        .number()
+        .int()
+        .min(1)
+        .max(5000)
+        .default(200)
+        .describe(
+          "Number of recent log lines to return (default 200, max 5000)."
         ),
       device_id: z
         .string()
@@ -25,25 +40,27 @@ export const logLogcat = tool(
         ),
     }),
   },
-  async ({ app_package, log_level, device_id }) => {
+  async ({ app_package, log_level, lines, device_id }) => {
     const resolved = await resolveDevice(device_id);
 
-    const pidResult = await callAdb(
-      ["shell", "pidof", "-s", app_package],
-      resolved
-    );
-    const pid = pidResult.stdout.trim();
-    if (pidResult.exitCode !== 0 || !pid) {
-      return errorResult(
-        `App with package '${app_package}' not running or not found.`
-      );
-    }
-
     const logLevelMap: Record<string, string> = {
+      VERBOSE: "V",
       DEBUG: "D",
+      INFO: "I",
       WARNING: "W",
       ERROR: "E",
     };
+
+    // If app_package is provided, try to filter by PID
+    let pid: string | null = null;
+    if (app_package) {
+      const pidResult = await callAdb(
+        ["shell", "pidof", "-s", app_package],
+        resolved
+      );
+      pid = pidResult.stdout.trim() || null;
+      // Don't fail — app may not be running yet but there could be historical logs
+    }
 
     const result = await callAdb(
       ["logcat", "-d", "-b", "default", `*:${logLevelMap[log_level]}`],
@@ -54,11 +71,22 @@ export const logLogcat = tool(
       return errorResult(`Error getting logcat output: ${result.stderr}`);
     }
 
-    const filteredLines = result.stdout
-      .split("\n")
-      .filter((line) => line.includes(pid));
+    let outputLines = result.stdout.split("\n");
 
-    return textResult(filteredLines.slice(-100).join("\n"));
+    // Filter by PID if we found a running app
+    if (pid) {
+      outputLines = outputLines.filter((line) => line.includes(pid));
+    } else if (app_package) {
+      // App not running — fall back to filtering by package name string in log lines
+      outputLines = outputLines.filter((line) => line.includes(app_package));
+      if (outputLines.length === 0) {
+        return textResult(
+          `No logs found for '${app_package}'. The app may not be running and has no recent log entries.`
+        );
+      }
+    }
+
+    return textResult(outputLines.slice(-lines).join("\n"));
   }
 );
 
