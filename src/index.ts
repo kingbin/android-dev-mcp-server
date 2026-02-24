@@ -15,6 +15,7 @@ import { deviceManagementTools } from "./tools/device-management.js";
 import { screenInteractionTools, setTempDir } from "./tools/screen-interaction.js";
 import { logsTools } from "./tools/logs.js";
 import { reactNativeTools } from "./tools/react-native.js";
+import { metroTools } from "./tools/metro.js";
 import { crashTools } from "./tools/crash.js";
 
 const allTools: ServerTool[] = [
@@ -22,6 +23,7 @@ const allTools: ServerTool[] = [
   ...screenInteractionTools,
   ...logsTools,
   ...reactNativeTools,
+  ...metroTools,
   ...crashTools,
 ];
 
