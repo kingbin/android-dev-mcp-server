@@ -7,6 +7,11 @@
   "bin": {
     "android-dev-mcp-server": "./build/index.js"
   },
+  "files": [
+    "build",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",
@@ -15,11 +20,24 @@
   },
   "keywords": [
     "mcp",
+    "model-context-protocol",
     "android",
     "adb",
+    "emulator",
+    "react-native",
+    "logcat",
     "development"
   ],
+  "author": "Chris Blazek <kingbin13@pm.me>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kingbin/android-dev-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kingbin/android-dev-mcp-server/issues"
+  },
+  "homepage": "https://github.com/kingbin/android-dev-mcp-server#readme",
   "engines": {
     "node": ">=20.0.0"
   },
